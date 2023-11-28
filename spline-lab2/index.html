@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кривая Безье по 4 точкам с перемещаемыми точками и вводом значений</title>
+</head>
+<body>
+  <h2>Кривая Безье по 4 точкам. Выполнил Агаев Багир</h2>
+
+  <label for="point1">Точка 1:</label>
+  <input type="text" id="point1X" placeholder="x" oninput="updatePoint(0, 'x')">
+  <input type="text" id="point1Y" placeholder="y" oninput="updatePoint(0, 'y')"><br>
+
+  <label for="point2">Точка 2:</label>
+  <input type="text" id="point2X" placeholder="x" oninput="updatePoint(1, 'x')">
+  <input type="text" id="point2Y" placeholder="y" oninput="updatePoint(1, 'y')"><br>
+
+  <label for="point3">Точка 3:</label>
+  <input type="text" id="point3X" placeholder="x" oninput="updatePoint(2, 'x')">
+  <input type="text" id="point3Y" placeholder="y" oninput="updatePoint(2, 'y')"><br>
+
+  <label for="point4">Точка 4:</label>
+  <input type="text" id="point4X" placeholder="x" oninput="updatePoint(3, 'x')">
+  <input type="text" id="point4Y" placeholder="y" oninput="updatePoint(3, 'y')"><br>
+
+  <canvas id="bezierCanvas" width="400" height="400" style="border:1px solid #000;"></canvas>
+
+  <script>
+    const canvas = document.getElementById('bezierCanvas');
+    const ctx = canvas.getContext('2d');
+    const points = [
+      { x: 50, y: 200 },
+      { x: 150, y: 50 },
+      { x: 250, y: 50 },
+      { x: 350, y: 200 }
+    ];
+    let selectedPoint = null;
+
+    function drawBezier() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.bezierCurveTo(points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+      ctx.stroke();
+
+      // Отмечаем и рисуем контрольные точки
+      ctx.fillStyle = 'red';
+      ctx.font = '10px Arial';
+      points.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(`(${Math.round(point.x)}, ${Math.round(point.y)})`, point.x + 10, point.y - 10);
+      });
+
+      // Соединяем точки линиями
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+      ctx.lineTo(points[2].x, points[2].y);
+      ctx.lineTo(points[3].x, points[3].y);
+      ctx.strokeStyle = 'blue';
+      ctx.stroke();
+    }
+
+    function handleMouseDown(event) {
+      const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+      const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+
+      // Проверяем, находится ли мышь над какой-то точкой
+      for (let i = 0; i < points.length; i++) {
+        const distance = Math.sqrt(
+          Math.pow(mouseX - points[i].x, 2) + Math.pow(mouseY - points[i].y, 2)
+        );
+
+        if (distance < 5) {
+          selectedPoint = points[i];
+          canvas.addEventListener('mousemove', handleMouseMove);
+          canvas.addEventListener('mouseup', handleMouseUp);
+          break;
+        }
+      }
+    }
+
+    function handleMouseMove(event) {
+      if (selectedPoint) {
+        selectedPoint.x = event.clientX - canvas.getBoundingClientRect().left;
+        selectedPoint.y = event.clientY - canvas.getBoundingClientRect().top;
+        updateInputValues();
+        drawBezier();
+      }
+    }
+
+    function handleMouseUp() {
+      selectedPoint = null;
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    function updateInputValues() {
+      document.getElementById('point1X').value = Math.round(points[0].x);
+      document.getElementById('point1Y').value = Math.round(points[0].y);
+      document.getElementById('point2X').value = Math.round(points[1].x);
+      document.getElementById('point2Y').value = Math.round(points[1].y);
+      document.getElementById('point3X').value = Math.round(points[2].x);
+      document.getElementById('point3Y').value = Math.round(points[2].y);
+      document.getElementById('point4X').value = Math.round(points[3].x);
+      document.getElementById('point4Y').value = Math.round(points[3].y);
+    }
+
+    function updatePoint(index, coordinate) {
+      const inputValue = parseFloat(document.getElementById(`point${index + 1}${coordinate.toUpperCase()}`).value);
+      if (!isNaN(inputValue)) {
+        points[index][coordinate] = inputValue;
+        drawBezier();
+      }
+    }
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    
+    // Инициализация отрисовки и значений инпутов при загрузке страницы
+    drawBezier();
+    updateInputValues();
+  </script>
+</body>
+</html>
